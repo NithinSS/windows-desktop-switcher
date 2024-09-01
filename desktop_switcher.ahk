@@ -15,6 +15,9 @@ hVirtualDesktopAccessor := DllCall("LoadLibrary", "Str", A_ScriptDir . "\Virtual
 global IsWindowOnDesktopNumberProc := DllCall("GetProcAddress", Ptr, hVirtualDesktopAccessor, AStr, "IsWindowOnDesktopNumber", "Ptr")
 global MoveWindowToDesktopNumberProc := DllCall("GetProcAddress", Ptr, hVirtualDesktopAccessor, AStr, "MoveWindowToDesktopNumber", "Ptr")
 global GoToDesktopNumberProc := DllCall("GetProcAddress", Ptr, hVirtualDesktopAccessor, AStr, "GoToDesktopNumber", "Ptr")
+global IsPinnedWindowProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "IsPinnedWindow", "Ptr")
+global PinWindowProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "PinWindow", "Ptr")
+global UnPinWindowProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "UnPinWindow", "Ptr")
 
 ; Main
 SetKeyDelay, 75
@@ -190,6 +193,11 @@ MoveCurrentWindowToDesktop(desktopNumber) {
     switchDesktopByNumber(desktopNumber)
 }
 
+JustMoveCurrentWindowToDesktop(desktopNumber) {
+    WinGet, activeHwnd, ID, A
+    DllCall(MoveWindowToDesktopNumberProc, UInt, activeHwnd, UInt, desktopNumber - 1)
+}
+
 MoveCurrentWindowToRightDesktop()
 {
     global CurrentDesktop, DesktopCount
@@ -233,4 +241,21 @@ deleteVirtualDesktop()
     DesktopCount--
     CurrentDesktop--
     OutputDebug, [delete] desktops: %DesktopCount% current: %CurrentDesktop%
+}
+
+TogglePinWindow()
+{
+    WinGet, activeHwnd, ID, A
+    isPinned := DllCall(IsPinnedWindowProc, UInt, activeHwnd)
+
+    if (isPinned) {
+        DllCall(UnPinWindowProc, UInt, activeHwnd)
+    } else {
+        DllCall(PinWindowProc, UInt, activeHwnd)
+    }
+}
+
+ShowCurrentDesktop()
+{
+    TrayTip, My Title, Multiline`nText, 20, 17
 }
